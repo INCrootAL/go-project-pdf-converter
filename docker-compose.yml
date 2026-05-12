@@ -1,0 +1,53 @@
+services:
+  pdf-converter:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdf-converter
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - MAX_CONCURRENT=4
+      - CONVERSION_TIMEOUT=120
+      - MAX_FILE_SIZE=104857600
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    dns:
+      - 0.0.0.0
+    networks:
+      - isolated
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    sysctls:
+      - net.ipv4.ip_forward=0
+      - net.ipv6.conf.all.forwarding=0
+    read_only: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512M
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1.5G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+networks:
+  isolated:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+    internal: false
